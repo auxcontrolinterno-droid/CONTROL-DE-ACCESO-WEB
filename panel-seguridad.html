@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguridad — Control de acceso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182449; --ink-soft:#3d4a78;
+    --paper:#f5f3ee; --card:#ffffff;
+    --gold:#c8922f; --gold-soft:#f2e3c4;
+    --green:#2f7a54; --green-soft:#e3f2e9;
+    --red:#b23a3a; --red-soft:#f6dede;
+    --line:#e2ded3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh;
+    background:var(--paper);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  header{
+    background:var(--ink);
+    color:#fdf9ee;
+    padding:18px 26px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  header .left{display:flex;align-items:center;gap:10px;}
+  header .mark{
+    width:32px;height:32px;border-radius:8px;background:var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+  }
+  header .ttl{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;}
+  header .role{font-size:12px;color:#b9c0dd;}
+  main{
+    max-width:1000px;
+    margin:0 auto;
+    padding:26px 20px 60px;
+  }
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+  .tab{
+    padding:9px 14px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    background:#fff;
+    border:1.5px solid var(--line);
+    color:var(--ink-soft);
+    display:flex;align-items:center;gap:7px;
+    white-space:nowrap;
+    flex:1 1 auto;
+    justify-content:center;
+  }
+  .tab.active{background:var(--ink);color:#fdf9ee;border-color:var(--ink);}
+  .count{
+    background:var(--gold);
+    color:var(--ink);
+    border-radius:20px;
+    font-size:11px;
+    padding:1px 7px;
+    font-weight:700;
+    flex-shrink:0;
+  }
+  .tab.active .count{background:var(--gold-soft);}
+  @media (max-width:520px){
+    .tabs{flex-direction:column;}
+    .tab{width:100%;justify-content:space-between;font-size:13.5px;}
+  }
+  section{display:none;}
+  section.active{display:block;}
+
+  .alert-card{
+    background:var(--red-soft);
+    border:1px solid #e3b4b4;
+    border-radius:14px;
+    padding:16px 18px;
+    margin-bottom:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+  }
+  .alert-card.atendida{
+    background:var(--green-soft);
+    border-color:#b9dcc5;
+    opacity:.75;
+  }
+  .alert-card .info b{display:block;font-size:15px;margin-bottom:3px;}
+  .alert-card .info span{font-size:13px;color:var(--ink-soft);}
+  .alert-card .badge-atender{
+    background:var(--red);
+    color:#fff;
+    border:none;
+    padding:9px 14px;
+    border-radius:9px;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .alert-card.atendida .badge-atender{background:var(--green);}
+
+  .visit-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-bottom:10px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+  }
+  .visit-card .who{display:flex;gap:12px;align-items:center;min-width:0;flex:1 1 220px;}
+  .visit-card .who .name, .visit-card .who .meta{overflow-wrap:break-word;}
+  .avatar{
+    width:42px;height:42px;border-radius:11px;
+    background:var(--ink);color:var(--gold-soft);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+    flex-shrink:0;
+  }
+  .who .name{font-weight:600;font-size:15px;}
+  .who .meta{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  ..who .meta code{
+    font-family:'IBM Plex Mono',monospace;
+    background:#f1efe9;
+    padding:1px 5px;
+    border-radius:4px;
+  }
+  .detalle-grid{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 16px;
+    margin:12px 0 2px;
+    padding-top:12px;
+    border-top:1px dashed var(--line);
+  }
+  ..detalle-grid > div{display:flex;flex-direction:column;gap:2px;}
+  .detalle-grid b{
+    font-size:11px;text-transform:uppercase;letter-spacing:.03em;
+    color:var(--ink-soft);font-weight:700;
+  }
+  .detalle-grid span{font-size:13.5px;color:var(--ink);word-break:break-word;}
+  .visit-card.detallada{flex-direction:column;align-items:stretch;}
+  .visit-card.detallada .who{flex:none;}
+  @media (max-width:480px){
+    .detalle-grid{grid-template-columns:1fr;}
+  }
+  .status{
+    font-size:11.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding:5px 10px;
+    border-radius:20px;
+  }
+  .status.registrado{background:var(--gold-soft);color:#8a651c;}
+  .status.verificado{background:var(--green-soft);color:var(--green);}
+  .status.en_edificio{background:#dde6fb;color:#2f4f9e;}
+  .status.salida{background:#eee;color:#777;}
+
+  .actions-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0;}
+  .btn-sm{
+    border:1.5px solid var(--line);
+    background:#fff;
+    padding:8px 12px;
+    border-radius:9px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .btn-sm.primary{background:var(--ink);color:#fdf9ee;border-color:var(--ink);}
+  .btn-sm.check{background:#fff;border-color:var(--gold);color:#8a651c;}
+  .btn-sm.check.done{background:var(--green-soft);border-color:#b9dcc5;color:var(--green);}
+
+  .antecedentes-row{
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed var(--line);
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .antecedentes-row .links{display:flex;flex-wrap:wrap;gap:8px;}
+  .antecedentes-row a{
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+    text-decoration:none;
+    border:1.5px solid var(--line);
+    padding:6px 10px;
+    border-radius:8px;
+    white-space:nowrap;
+  }
+  .antecedentes-row a:hover{border-color:var(--gold);}
+  .antecedentes-row .verif{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+  .antecedentes-row .estado-ant{font-size:12px;font-weight:600;white-space:nowrap;}
+  .antecedentes-row .estado-ant.ok{color:var(--green);}
+  .antecedentes-row .estado-ant.pend{color:#8a651c;}
+
+  .empty{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+
+  /* Login */
+  .login-wrap{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .login-card{
+    width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:30px 26px;
+  }
+  .login-card .brand{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+  .login-card .mark{
+    width:32px;height:32px;border-radius:8px;background:var(--ink);color:var(--gold-soft);
+    display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+  }
+  .login-card .brand span{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;}
+  .login-card h1{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:0 0 4px;}
+  .login-card .sub{margin:0 0 20px;color:var(--ink-soft);font-size:14px;}
+  .login-card .field{margin-bottom:16px;}
+  .login-card .field label{display:block;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:7px;}
+  .login-card .field input{width:100%;padding:12px 13px;border-radius:11px;border:1.5px solid var(--line);font-size:15px;font-family:'Inter',sans-serif;background:#fbfaf7;color:var(--ink);}
+  .login-card .field input:focus{outline:none;border-color:var(--gold);background:#fff;}
+  .login-card .btn-full{width:100%;padding:13px;border-radius:11px;border:none;background:var(--ink);color:#fdf9ee;font-weight:600;font-size:15px;cursor:pointer;}
+  .login-error{color:var(--red);font-size:13px;margin:10px 0 0;min-height:16px;}
+  .login-toggle{margin:14px 0 0;font-size:13px;color:var(--ink-soft);text-align:center;}
+  .login-toggle a{color:var(--ink);font-weight:600;text-decoration:none;cursor:pointer;}
+  .login-toggle a:hover{text-decoration:underline;}
+  header .btn-logout{
+    background:rgba(255,255,255,.08);color:#fdf9ee;border:1px solid rgba(255,255,255,.25);
+    border-radius:9px;padding:8px 12px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <div class="brand"><div class="mark">CA</div><span>Control de acceso</span></div>
+    <h1>Panel de seguridad</h1>
+    <p class="sub">Iniciá sesión con tu cuenta para continuar.</p>
+    <div class="field"><label>Correo</label><input id="login-email" type="email" autofocus></div>
+    <div class="field"><label>Contraseña</label><input id="login-pass" type="password"></div>
+    <div class="field" id="campo-cargo" style="display:none;">
+      <label>Cargo</label>
+      <select id="reg-cargo">
+        <option value="" disabled selected>Seleccioná tu cargo</option>
+        <option value="Jefe de seguridad">Jefe de seguridad</option>
+        <option value="Asistente del jefe de seguridad">Asistente del jefe de seguridad</option>
+        <option value="Guarda de seguridad">Guarda de seguridad</option>
+      </select>
+    </div>
+    <button class="btn-full" id="btn-login">Ingresar</button>
+    <button class="btn-full" id="btn-registrar" style="display:none;">Crear cuenta</button>
+    <p class="login-error" id="login-error"></p>
+    <p class="login-toggle"><a href="#" id="link-toggle-registro">¿No tenés cuenta? Crear una</a></p>
+  </div>
+</div>
+
+<div id="app-wrap" style="display:none;">
+<header>
+  <div class="left">
+    <div class="mark">CA</div>
+    <div>
+      <div class="ttl">Control de acceso</div>
+      <div class="role">Panel de seguridad</div>
+    </div>
+  </div>
+  <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+</header>
+<main>
+  <div class="tabs">
+  <div class="tab active" data-tab="alertas">🔔 Alertas zona académica <span class="count" id="c-alertas">0</span></div>
+  <div class="tab" data-tab="pendientes">🕓 Por verificar <span class="count" id="c-pendientes">0</span></div>
+  <div class="tab" data-tab="edificio">🏢 En el edificio <span class="count" id="c-edificio">0</span></div>
+  <div class="tab" data-tab="hoy">📅 Ingresos de hoy <span class="count" id="c-hoy">0</span></div>
+  <div class="tab" data-tab="historial">🗂 Historial general <span class="count" id="c-historial">0</span></div>
+</div>
+
+<section id="sec-alertas" class="active"></section>
+<section id="sec-pendientes"></section>
+<section id="sec-edificio"></section>
+<section id="sec-hoy"></section>
+<section id="sec-historial"></section>
+</main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import {
+  getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBhsnB9RWok_5Nmb2Nr2vusKETSURnfTO0",
+  authDomain: "control-de-acceso-6fbea.firebaseapp.com",
+  projectId: "control-de-acceso-6fbea",
+  storageBucket: "control-de-acceso-6fbea.firebasestorage.app",
+  messagingSenderId: "873946827663",
+  appId: "1:873946827663:web:2a0393efbeacb5442799fa"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const auth = getAuth(fbApp);
+
+/* ------------------------------------------------------------------
+   Login: mientras no haya sesión, se muestra solo el formulario.
+   Apenas Firebase confirma la sesión, se muestra el panel y recién
+   ahí arrancamos los listeners de Firestore (iniciarPanel).
+   ------------------------------------------------------------------ */
+const loginScreen = document.getElementById("login-screen");
+const appWrap = document.getElementById("app-wrap");
+let panelIniciado = false;
+
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    loginScreen.style.display = "none";
+    appWrap.style.display = "block";
+    if(!panelIniciado){ panelIniciado = true; iniciarPanel(); }
+  } else {
+    panelIniciado = false;
+    loginScreen.style.display = "flex";
+    appWrap.style.display = "none";
+  }
+});
+
+document.getElementById("btn-login").onclick = async () => {
+  const email = document.getElementById("login-email").value.trim();
+  const pass = document.getElementById("login-pass").value;
+  const btn = document.getElementById("btn-login");
+  const err = document.getElementById("login-error");
+  err.textContent = "";
+  if(!email || !pass) return;
+  btn.disabled = true; btn.textContent = "Ingresando...";
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(e){
+    console.error("Error de login:", e);
+    err.textContent = "Correo o contraseña incorrectos.";
+  }
+  btn.disabled = false; btn.textContent = "Ingresar";
+};
+
+document.getElementById("btn-logout").onclick = () => signOut(auth);
+
+/* ------------------------------------------------------------------
+   Alternar entre "Iniciar sesión" y "Crear cuenta" en la misma
+   pantalla, reutilizando los campos de correo y contraseña.
+   ------------------------------------------------------------------ */
+let modoRegistro = false;
+const btnLogin = document.getElementById("btn-login");
+const btnRegistrar = document.getElementById("btn-registrar");
+const linkToggle = document.getElementById("link-toggle-registro");
+const subLogin = document.querySelector("#login-screen .sub");
+const loginError = document.getElementById("login-error");
+
+linkToggle.onclick = (e) => {
+  e.preventDefault();
+  modoRegistro = !modoRegistro;
+  loginError.textContent = "";
+  const campoCargo = document.getElementById("campo-cargo");
+  if(modoRegistro){
+    btnLogin.style.display = "none";
+    btnRegistrar.style.display = "block";
+    campoCargo.style.display = "block";
+    subLogin.textContent = "Creá tu cuenta para continuar.";
+    linkToggle.textContent = "¿Ya tenés cuenta? Iniciar sesión";
+  } else {
+    btnLogin.style.display = "block";
+    btnRegistrar.style.display = "none";
+    campoCargo.style.display = "none";
+    subLogin.textContent = "Iniciá sesión con tu cuenta para continuar.";
+    linkToggle.textContent = "¿No tenés cuenta? Crear una";
+  }
+};
+
+btnRegistrar.onclick = async () => {
+  const email = document.getElementById("login-email").value.trim();
+  const pass = document.getElementById("login-pass").value;
+  const cargo = document.getElementById("reg-cargo").value;
+  loginError.textContent = "";
+  if(!email || !pass) return;
+  if(pass.length < 6){
+    loginError.textContent = "La contraseña debe tener al menos 6 caracteres.";
+    return;
+  }
+  if(!cargo){
+    loginError.textContent = "Elegí tu cargo para crear la cuenta.";
+    return;
+  }
+  btnRegistrar.disabled = true; btnRegistrar.textContent = "Creando cuenta...";
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, "usuarios", cred.user.uid), {
+      email, cargo, rol: "seguridad", creado: serverTimestamp()
+    });
+  }catch(e){
+    console.error("Error creando la cuenta:", e);
+    if(e.code === "auth/email-already-in-use"){
+      loginError.textContent = "Ese correo ya tiene una cuenta. Iniciá sesión.";
+    } else if(e.code === "auth/weak-password"){
+      loginError.textContent = "La contraseña es muy débil (mínimo 6 caracteres).";
+    } else if(e.code === "auth/invalid-email"){
+      loginError.textContent = "El correo no es válido.";
+    } else {
+      loginError.textContent = "No pudimos crear la cuenta. Intentá de nuevo.";
+    }
+  }
+  btnRegistrar.disabled = false; btnRegistrar.textContent = "Crear cuenta";
+};
+
+/* ------------------------------------------------------------------
+   "visitas" y "alertas" vienen de Firestore en tiempo real. Seguridad
+   ve TODO (sin filtrar por anfitrión), así que apenas alguien se
+   registra en el kiosko, aparece acá solo.
+   ------------------------------------------------------------------ */
+let visitas = [];  // [{ id, ...datosDeLaVisita }]
+let alertas = [];  // [{ id, ...datosDeLaAlerta }]
+
+function iniciarPanel(){
+  onSnapshot(collection(db, "visitas"), (snap) => {
+    visitas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  }, (err) => console.error("Error escuchando visitas:", err));
+
+  onSnapshot(collection(db, "alertas"), (snap) => {
+    alertas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  }, (err) => console.error("Error escuchando alertas:", err));
+
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("sec-"+tab.dataset.tab).classList.add("active");
+    };
+  });
+}
+
+const iniciales = n => n.split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
+const hora = d => {
+  if(!d) return "—";
+  const fecha = d.toDate ? d.toDate() : new Date(d); // soporta Timestamp de Firestore
+  return fecha.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+};
+
+const nombreEstado = {
+  registrado:"Registrado", verificado:"Verificado", en_edificio:"En el edificio", salida:"Salida registrada"
+};
+
+function renderTabs() {
+  document.getElementById("c-alertas").textContent = alertas.filter(a => a.estado === "pendiente").length;
+  document.getElementById("c-pendientes").textContent = visitas.filter(v => v.estado === "registrado").length;
+  document.getElementById("c-edificio").textContent = visitas.filter(v => v.estado === "en_edificio").length;
+  document.getElementById("c-hoy").textContent = visitas.filter(v => esHoy(v.hora)).length;
+  document.getElementById("c-historial").textContent = visitas.length;
+}
+
+function renderAlertas(){
+  const sec = document.getElementById("sec-alertas");
+  if(alertas.length===0){ sec.innerHTML = `<div class="empty">No hay alertas de zona académica.</div>`; return; }
+  sec.innerHTML = alertas.map(a=>`
+    <div class="alert-card ${a.estado==='atendida'?'atendida':''}">
+      <div class="info">
+        <b>${a.persona} · ${a.entidad}</b>
+        <span>Se dirige a: ${a.destino} · ${hora(a.hora)}</span>
+      </div>
+      <button class="badge-atender" data-id="${a.id}" ${a.estado==='atendida'?'disabled':''}>${a.estado==='atendida' ? '✓ Atendida' : 'Marcar atendida'}</button>
+    </div>
+  `).join("");
+  sec.querySelectorAll(".badge-atender").forEach(btn=>{
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try{
+        await updateDoc(doc(db, "alertas", btn.dataset.id), { estado: "atendida" });
+      }catch(e){
+        console.error("Error marcando la alerta como atendida:", e);
+        alert("No pudimos guardar el cambio. Intentá de nuevo.");
+        btn.disabled = false; btn.textContent = "Marcar atendida";
+      }
+    };
+  });
+}
+
+function renderPendientes(){
+  const sec = document.getElementById("sec-pendientes");
+  const lista = visitas.filter(v=>v.estado==="registrado");
+  if(lista.length===0){ sec.innerHTML = `<div class="empty">No hay registros pendientes de verificar.</div>`; return; }
+  sec.innerHTML = lista.map(v=>{
+    const ant = v.antecedentes || {verificado:false, fecha:null};
+    return `
+    <div class="visit-card">
+      <div class="who">
+        <div class="avatar">${iniciales(v.nombre)}</div>
+        <div>
+          <div class="name">${v.nombre}</div>
+          <div class="meta"><code>${v.documento}</code> · ${v.entidad} · ${v.tipo}${v.zona ? " → "+v.zona.nombre : (v.anfitrion ? " → cita con "+v.anfitrion : "")}</div>
+        </div>
+      </div>
+      <div class="actions-row">
+        <span class="status registrado">${nombreEstado[v.estado]}</span>
+        <button class="btn-sm primary" data-id="${v.id}" data-action="verificar">Verificar</button>
+      </div>
+      <div class="antecedentes-row">
+        <div class="links">
+          <a href="https://antecedentes.policia.gov.co:7005/WebJudicial/formAntecedentes.xhtml" target="_blank" rel="noopener" data-doc="${v.documento}" class="link-ant">Consultar Policía ↗</a>
+          <a href="https://www.procuraduria.gov.co/Pages/certificado-antecedentes.aspx" target="_blank" rel="noopener" data-doc="${v.documento}" class="link-ant">Consultar Procuraduría ↗</a>
+        </div>
+        <div class="verif">
+          <span class="estado-ant ${ant.verificado ? 'ok' : 'pend'}">${ant.verificado ? "Antecedentes verificados · "+hora(ant.fecha) : "Antecedentes sin verificar"}</span>
+          <button class="btn-sm check ${ant.verificado?'done':''}" data-id="${v.id}" data-verificado="${ant.verificado?'1':'0'}" data-action="toggle-ant">${ant.verificado ? "✓" : "Marcar verificado"}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  sec.querySelectorAll(".link-ant").forEach(a=>{
+    a.addEventListener("click", () => {
+      const doc = a.dataset.doc;
+      if(navigator.clipboard) navigator.clipboard.writeText(doc).catch(()=>{});
+    });
+  });
+  sec.querySelectorAll("[data-action='verificar']").forEach(btn=>{
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try{
+        await updateDoc(doc(db, "visitas", btn.dataset.id), { estado: "en_edificio" });
+      }catch(e){
+        console.error("Error verificando la visita:", e);
+        alert("No pudimos guardar el cambio. Intentá de nuevo.");
+        btn.disabled = false; btn.textContent = "Verificar";
+      }
+    };
+  });
+  sec.querySelectorAll("[data-action='toggle-ant']").forEach(btn=>{
+    btn.onclick = async () => {
+      const yaVerificado = btn.dataset.verificado === "1";
+      btn.disabled = true;
+      try{
+        await updateDoc(doc(db, "visitas", btn.dataset.id), {
+          antecedentes: { verificado: !yaVerificado, fecha: !yaVerificado ? new Date() : null }
+        });
+      }catch(e){
+        console.error("Error actualizando antecedentes:", e);
+        alert("No pudimos guardar el cambio. Intentá de nuevo.");
+      }
+      btn.disabled = false;
+    };
+  });
+}
+
+function renderEdificio(){
+  const sec = document.getElementById("sec-edificio");
+  const lista = visitas.filter(v=>v.estado==="en_edificio");
+  if(lista.length===0){ sec.innerHTML = `<div class="empty">No hay personas registradas dentro del edificio ahora mismo.</div>`; return; }
+  sec.innerHTML = lista.map(v=>`
+    <div class="visit-card">
+      <div class="who">
+        <div class="avatar">${iniciales(v.nombre)}</div>
+        <div>
+          <div class="name">${v.nombre}</div>
+          <div class="meta"><code>${v.documento}</code> · ${v.entidad} · ${v.tipo}${v.zona ? " → "+v.zona.nombre : (v.anfitrion ? " → cita con "+v.anfitrion : "")}</div>
+        </div>
+      </div>
+      <div class="actions-row">
+        <span class="status en_edificio">${nombreEstado[v.estado]}</span>
+        ${v.tipo!=='invitado' ? `<button class="btn-sm" data-id="${v.id}" data-action="salida">Registrar salida</button>` : `<span class="btn-sm" style="opacity:.55;cursor:default;">Salida la da el anfitrión</span>`}
+      </div>
+    </div>`
+  ).join("");
+  sec.querySelectorAll("[data-action='salida']").forEach(btn=>{
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try{
+        await updateDoc(doc(db, "visitas", btn.dataset.id), { estado: "salida" });
+      }catch(e){
+        console.error("Error registrando salida:", e);
+        alert("No pudimos guardar el cambio. Intentá de nuevo.");
+        btn.disabled = false; btn.textContent = "Registrar salida";
+      }
+    };
+  });
+}
+
+/* ------------------------------------------------------------------
+   Ingresos de hoy: filtra por la fecha de "hora" comparada con la
+   fecha actual del navegador. Como se recalcula en cada render (que
+   se dispara con cada cambio en Firestore), al pasar la medianoche
+   automáticamente empieza a mostrar los registros del día nuevo.
+   ------------------------------------------------------------------ */
+function esHoy(timestamp) {
+  if (!timestamp || !timestamp.toDate) return false;
+  const fecha = timestamp.toDate();
+  const hoy = new Date();
+  return fecha.getFullYear() === hoy.getFullYear() &&
+    fecha.getMonth() === hoy.getMonth() &&
+    fecha.getDate() === hoy.getDate();
+}
+
+const nombreTipo = { invitado: "Invitado", proveedor: "Proveedor", contratista: "Contratista" };
+
+function tarjetaVisita(v) {
+  const destino = v.zona ? v.zona.nombre : (v.anfitrion ? "Cita con " + v.anfitrion : "—");
+  const vehiculo = v.vehiculo ? ("Sí · placa " + (v.placa || "—")) : "No";
+  const emergencia = v.emergenciaNombre ?
+    v.emergenciaNombre + (v.emergenciaTelefono ? " · " + v.emergenciaTelefono : "") :
+    "—";
+  return `
+    <div class="visit-card detallada">
+      <div class="who">
+        <div class="avatar">${iniciales(v.nombre)}</div>
+        <div>
+          <div class="name">${v.nombre}</div>
+          <div class="meta"><code>${v.documento}</code> · ${v.documentoTipo || "—"}</div>
+        </div>
+      </div>
+      <div class="detalle-grid">
+        <div><b>Contacto</b><span>${v.contacto || "—"}</span></div>
+        <div><b>Entidad</b><span>${v.entidad || "—"}</span></div>
+        <div><b>Tipo de visita</b><span>${nombreTipo[v.tipo] || v.tipo || "—"}</span></div>
+        <div><b>Destino</b><span>${destino}</span></div>
+        <div><b>Vehículo</b><span>${vehiculo}</span></div>
+        <div><b>Contacto de emergencia</b><span>${emergencia}</span></div>
+      </div>
+      <div class="actions-row" style="margin-top:10px;">
+        <span class="status ${v.estado}">${nombreEstado[v.estado]}</span>
+        <span style="font-size:12.5px;color:var(--ink-soft);">${hora(v.hora)}</span>
+      </div>
+    </div>`;
+}
+
+function ordenarPorHoraDesc(lista) {
+  return [...lista].sort((a, b) => {
+    const ta = a.hora?.toDate ? a.hora.toDate().getTime() : 0;
+    const tb = b.hora?.toDate ? b.hora.toDate().getTime() : 0;
+    return tb - ta; // más reciente primero
+  });
+}
+
+function renderHoy() {
+  const sec = document.getElementById("sec-hoy");
+  const lista = ordenarPorHoraDesc(visitas.filter(v => esHoy(v.hora)));
+  if (lista.length === 0) { sec.innerHTML = `<div class="empty">Todavía no hay registros de hoy.</div>`; return; }
+  sec.innerHTML = lista.map(tarjetaVisita).join("");
+}
+
+function renderHistorial() {
+  const sec = document.getElementById("sec-historial");
+  const lista = ordenarPorHoraDesc(visitas);
+  if (lista.length === 0) { sec.innerHTML = `<div class="empty">Todavía no hay ningún registro.</div>`; return; }
+  sec.innerHTML = lista.map(tarjetaVisita).join("");
+}
+
+function renderAll() {
+  renderTabs();
+  renderAlertas();
+  renderPendientes();
+  renderEdificio();
+  renderHoy();
+  renderHistorial();
+}
+
+</script>
+</body>
+</html>
