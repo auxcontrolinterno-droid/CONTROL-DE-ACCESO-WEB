@@ -474,7 +474,7 @@ try {
         console.warn("No se pudo cargar la última visita para precargar más datos:", e);
       }
 
-      go("confirmar");
+      go("tipo");
     } else {
       state.esConocida = false;
       go("tipo");
@@ -633,7 +633,7 @@ function renderConfirmar(){
 function renderTipo(){
   app().innerHTML = `
     <h1>¿Qué tipo de visita haces?</h1>
-    <p class="sub">No encontramos un registro previo con ese documento. Completemos tus datos.</p>
+    <p class="sub">${state.esConocida ? "Encontramos tus datos. Revisa cada paso y confirma que todo esté correcto." : "No encontramos un registro previo con ese documento. Completemos tus datos."}</p>
     <div class="type-grid" id="tipo-grid"></div>
     <div class="actions">
       <button class="btn btn-ghost" id="btn-atras">Atrás</button>
@@ -650,6 +650,7 @@ function renderTipo(){
     const b = document.createElement("div");
     b.className = "type-btn";
     b.innerHTML = `<div class="ic">${t.ic}</div><div><div class="tt">${t.tt}</div><div class="dd">${t.dd}</div></div>`;
+    if(t.id === state.data.tipo) b.style.borderColor = "var(--gold)";
     b.onclick = () => {
       state.data.tipo = t.id;
       [...grid.children].forEach(c=>c.style.borderColor="var(--line)");
@@ -658,6 +659,7 @@ function renderTipo(){
     };
     grid.appendChild(b);
   });
+  if(state.data.tipo) document.getElementById("btn-continuar").disabled = false;
   document.getElementById("btn-atras").onclick = () => go("cedula");
   document.getElementById("btn-continuar").onclick = () => go("nombre");
 }
@@ -786,6 +788,7 @@ function renderVehiculo() {
   `;
   const grid = document.getElementById("veh-grid");
   [...grid.children].forEach(b => {
+    if((b.dataset.val === "si") === (state.data.vehiculo === true)) b.style.borderColor = "var(--gold)";
     b.onclick = () => {
       if (b.dataset.val === "si") {
         state.data.vehiculo = true;
@@ -797,7 +800,7 @@ function renderVehiculo() {
       }
     };
   });
-  document.getElementById("btn-atras").onclick = () => go(state.esConocida ? "confirmar" : "emergencia");
+  document.getElementById("btn-atras").onclick = () => go("emergencia");
 }
 
 /* ----------------------------- Paso: placa ----------------------------- */
@@ -859,6 +862,7 @@ function renderDestino(){
       b.className = "zone-btn";
       b.dataset.academic = z.academica ? "1" : "0";
       b.textContent = z.nombre;
+      if(state.data.zona && state.data.zona.nombre === z.nombre) b.classList.add("sel");
       b.onclick = () => {
         [...grid.children].forEach(c=>c.classList.remove("sel"));
         b.classList.add("sel");
@@ -867,6 +871,7 @@ function renderDestino(){
       };
       grid.appendChild(b);
     });
+    if(state.data.zona) document.getElementById("btn-continuar").disabled = false;
     document.getElementById("btn-atras").onclick = () => go(state.data.vehiculo ? "placa" : "vehiculo");
     document.getElementById("btn-continuar").onclick = () => {
       state.data.anfitrion = null;
