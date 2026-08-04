@@ -1,4 +1,4 @@
-const CACHE_NAME = "panel-seguridad-v1.8";
+const CACHE_NAME = "panel-seguridad-v1.9";
 const ASSETS = [
   "./panel-seguridad.html",
   "./manifest-seguridad.json",
