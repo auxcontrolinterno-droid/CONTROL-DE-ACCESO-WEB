@@ -1,4 +1,4 @@
-const CACHE_NAME = "panel-anfitrion-v1.7";
+const CACHE_NAME = "panel-anfitrion-v1.0.1";
 const ASSETS = [
   "./panel-anfitrion.html",
   "./manifest-anfitrion.json",
