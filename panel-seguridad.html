@@ -961,10 +961,11 @@ function tarjetaVisita(v) {
         <div><b>Contacto de emergencia</b><span>${emergencia}</span></div>
       </div>
       <div class="actions-row" style="margin-top:10px;">
-        <span class="status ${v.estado}">${nombreEstado[v.estado]}</span>
+        <span class="status ${v.estado}" id="scan-status-badge">${nombreEstado[v.estado]}</span>
         <span style="font-size:12.5px;color:var(--ink-soft);">
           Ingreso: ${hora(v.hora)}${v.estado==="salida_pendiente" ? " · Salida reportada por el anfitrión a las " + hora(v.horaSalidaReportada) + " (falta confirmar)" : ""}${v.horaSalida ? " · Salida: " + hora(v.horaSalida) + (v.salidaRegistradaPor==="anfitrion" ? " (reportada por el anfitrión, confirmada por seguridad)" : " (registrada por seguridad)") : ""}
         </span>
+        ${v.estado === "registrado" ? `<button class="btn-sm primary" id="btn-scan-dar-acceso" data-id="${v.id}">✓ Verificar y dar acceso</button>` : ``}
       </div>
     </div>`;
 }
@@ -1056,6 +1057,25 @@ function procesarCodigo(texto){
   }
   status.textContent = "Registro encontrado:";
   resultBox.innerHTML = tarjetaVisita(v);
+  const btnAcceso = document.getElementById("btn-scan-dar-acceso");
+  if(btnAcceso){
+    btnAcceso.onclick = async () => {
+      btnAcceso.disabled = true; btnAcceso.textContent = "Guardando...";
+      try{
+        await updateDoc(doc(db, "visitas", btnAcceso.dataset.id), { estado: "en_edificio" });
+        btnAcceso.textContent = "✓ Acceso otorgado";
+        const badge = document.getElementById("scan-status-badge");
+        if(badge){
+          badge.textContent = nombreEstado["en_edificio"];
+          badge.className = "status en_edificio";
+        }
+      }catch(e){
+        console.error("Error dando acceso desde el escaneo:", e);
+        alert("No pudimos guardar el cambio. Intentá de nuevo.");
+        btnAcceso.disabled = false; btnAcceso.textContent = "✓ Verificar y dar acceso";
+      }
+    };
+  }
 }
 
 function detenerCamara(){
