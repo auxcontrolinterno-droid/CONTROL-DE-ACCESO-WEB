@@ -954,8 +954,7 @@ function renderListo(){
       </div>
       <h1 style="text-align:center;">Registro enviado</h1>
       <p class="sub">Seguridad va a verificar tus datos en el ingreso. Esperá su indicación para pasar.</p>
-      ${esInvitado ? `<p class="sub" style="margin-top:-14px;">Anfitrión: <strong>${v.anfitrion}</strong></p>` : `<p class="sub" style="margin-top:-14px;">Destino: <strong>${v.zona.nombre}</strong></p>`}
-      ${v.vehiculo ? `<p class="sub" style="margin-top:-14px;">Vehículo: <strong>${v.placa}</strong></p>` : ``}
+${esInvitado ? `<p class="sub" style="margin-top:-14px;">Anfitrión: <strong>${v.anfitrion}</strong></p>` : (v.zona ? `<p class="sub" style="margin-top:-14px;">Destino: <strong>${v.zona.nombre}</strong></p>` : ``)}      ${v.vehiculo ? `<p class="sub" style="margin-top:-14px;">Vehículo: <strong>${v.placa}</strong></p>` : ``}
 ${alerta ? `<div class="alert-banner">⚠️ Este destino está dentro de la zona académica. Se notificó automáticamente al equipo de seguridad para acompañamiento.</div>` : ``}
       <div class="actions" style="margin-top:24px;">
         <button class="btn btn-primary" id="btn-nuevo">Nuevo registro</button>
